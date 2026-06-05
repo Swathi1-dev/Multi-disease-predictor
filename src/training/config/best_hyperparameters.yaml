@@ -1,0 +1,16 @@
+diabetes:
+  model_type: svc
+  params:
+    C: 1.0
+    gamma: scale
+    class_weight: balanced
+
+heart_disease:
+  model_type: random_forest
+  params:
+    n_estimators: 597
+    min_samples_split: 11
+    min_samples_leaf: 7
+    max_samples: 0.7
+    max_features: 0.35
+    max_depth: 5
