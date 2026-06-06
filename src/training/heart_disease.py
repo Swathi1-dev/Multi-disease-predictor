@@ -5,12 +5,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from joblib import dump
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GroupShuffleSplit
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, FunctionTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
-from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     classification_report,
     confusion_matrix,
@@ -54,6 +54,58 @@ def train_heart_disease_model():
         print(DATASET_PATH.exists())
         df = pd.DataFrame(pd.read_csv(DATASET_PATH))
         logging.info(f"Dataset loaded with shape: {df.shape}")
+
+        x = df.drop(TARGET_COL, axis=1)
+        y = df[TARGET_COL]
+
+        row_signature = pd.util.hash_pandas_object(x, index=False)
+
+        gss = GroupShuffleSplit(
+            n_splits=1, test_size=TEST_SIZE, random_state=RANDOM_STATE
+        )
+
+        train_idx, test_idx = next(gss.split(x, y, groups=row_signature))
+
+        x_train, x_test = x.iloc[train_idx], x.iloc[test_idx]
+        y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+
+        logging.info(f"Train shape: {x_train.shape}, Test shape:{x_test.shape}")
+
+        with open(HYPERPARAMS, "r") as f:
+            hyperparams = yaml.safe_load(f)
+
+        model_params = hyperparams["heart_disease"]["params"]
+
+        best_rf = RandomForestClassifier(
+            random_state=RANDOM_STATE, n_jobs=-1, **model_params
+        )
+
+        # Keep scaler in pipeline to match notebook structure
+
+        pipeline = Pipeline([("sclaer", StandardScaler()), ("model", best_rf)])
+
+        pipeline.fit(x_train, y_train)
+        logging.info("Model training completed")
+
+        y_train_pred = pipeline.predict(x_train)
+        y_test_pred = pipeline.predict(x_test)
+
+        logging.info(
+            f"Training Accuracy: {accuracy_score(y_train, y_train_pred):.4f}, "
+            f"F1 Score: {f1_score(y_train, y_train_pred):.4f}, "
+            f"Precision: {precision_score(y_train, y_train_pred):.4f}, "
+            f"Recall: {recall_score(y_train, y_train_pred):.4f}"
+        )
+
+        logging.info(
+            f"Test Accuracy: {accuracy_score(y_test, y_test_pred):.4f}, "
+            f"F1 Score: {f1_score(y_test, y_test_pred):.4f}, "
+            f"Precision: {precision_score(y_test, y_test_pred):.4f}, "
+            f"Recall: {recall_score(y_test, y_test_pred):.4f}"
+        )
+
+        dump(pipeline, MODEL_PATH / "heart_disease_prediction_pipeline.joblib")
+        logging.info(f"Model saved to {MODEL_PATH}")
 
     except Exception as e:
         logging.error("Training failed", exc_info=True)

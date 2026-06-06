@@ -4,6 +4,7 @@ diabetes:
     C: 1.0
     gamma: scale
     class_weight: balanced
+    probability: true
 
 heart_disease:
   model_type: random_forest
