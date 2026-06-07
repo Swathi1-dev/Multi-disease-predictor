@@ -40,7 +40,7 @@ def predict_disease(disease: str, input_data: dict):
     else:
         raise ValueError("Invalid disease type. Use diabetes or heart_disease")
 
-    x_df = pd.DataFrame(input_data)
+    x_df = pd.DataFrame(input_data, index=[0])
 
     prediction = int(model.predict(x_df)[0])
 
@@ -49,7 +49,37 @@ def predict_disease(disease: str, input_data: dict):
 
     logging.info(f"{disease} prediction={prediction},probability={probability}")
 
-    return {disease: disease, "prediction": prediction, "probability": probability}
+    return {"disease": disease, "prediction": prediction, "probability": probability}
 
 
-#
+# # example
+# features = {
+#     "age": 52,
+#     "sex": 1,
+#     "cp": 0,
+#     "trestbps": 125,
+#     "chol": 212,
+#     "fbs": 0,
+#     "restecg": 1,
+#     "thalach": 168,
+#     "exang": 0,
+#     "oldpeak": 1,
+#     "slope": 2,
+#     "ca": 2,
+#     "thal": 3,
+# }
+
+# predict_disease(disease="heart_disease", input_data=features)
+
+featuress = {
+    "Pregnancies": 6,
+    "Glucose": 148,
+    "BloodPressure": 72,
+    "SkinThickness": 35,
+    "Insulin": 0,
+    "BMI": 33.6,
+    "DiabetesPedigreeFunction": 0.627,
+    "Age": 50,
+}
+
+predict_disease(disease="diabetes", input_data=featuress)
