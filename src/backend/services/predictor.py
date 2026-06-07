@@ -18,19 +18,20 @@ LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s %(message)s",
-    handlers=[logging.FileHandler(LOG_PATH), logging.StramHandler()],
+    handlers=[logging.FileHandler(LOG_PATH / "app.log"), logging.StreamHandler()],
 )
 
 # load models once
 
 logging.info("Loading trained models...")
-diabets_model = load(DIABETES_MODEL_PATH)
-heart_disease_model = load(HEART_DISEASE_MODEL_PATH)
+diabets_model = load(DIABETES_MODEL_PATH / "diabetes_prediction_pipeline.joblib")
+heart_disease_model = load(
+    HEART_DISEASE_MODEL_PATH / "heart_disease_prediction_pipeline.joblib"
+)
 logging.info("Models loaded successfully.")
 
+
 # common predictor function
-
-
 def predict_disease(disease: str, input_data: dict):
     if disease == "diabetes":
         model = diabets_model
@@ -49,3 +50,6 @@ def predict_disease(disease: str, input_data: dict):
     logging.info(f"{disease} prediction={prediction},probability={probability}")
 
     return {disease: disease, "prediction": prediction, "probability": probability}
+
+
+#
